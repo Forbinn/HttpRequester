@@ -239,6 +239,8 @@ bool RequestBuilder::eventFilter(QObject * watched, QEvent * event)
             _ui->pbDeleteHeaders->click();
         else if (watched == _ui->tableParameters)
             _ui->pbDeleteParameters->click();
+        else
+            return false;
     }
     else if (keyEvent->key() == Qt::Key_Return || keyEvent->key() == Qt::Key_Enter)
         _submitRequest(_ui->cbMethod->currentText());
