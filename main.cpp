@@ -32,7 +32,7 @@ int main(int ac, char * av[])
     QApplication::setOrganizationDomain("vivoka.com");
     QApplication::setOrganizationName("vivoka");
     QApplication::setApplicationName(QFileInfo(av[0]).baseName());
-    QApplication::setApplicationVersion("1.4");
+    QApplication::setApplicationVersion("1.5");
 
     if (QStyleFactory::keys().contains(styleName))
         QApplication::setStyle(QStyleFactory::create(styleName));
