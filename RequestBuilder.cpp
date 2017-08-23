@@ -309,11 +309,11 @@ void RequestBuilder::_submitRequest(const QString & method)
     }
 
     QNetworkRequest request(url);
-    request.setHeader(QNetworkRequest::ContentTypeHeader, _ui->leContentType->text());
     request.setHeader(QNetworkRequest::UserAgentHeader, _generateDefaultUserAgent());
     for (int i = 0; i < _ui->tableHeaders->rowCount(); ++i)
         request.setRawHeader(_ui->tableHeaders->item(i, 0)->text().toUtf8(),
                              _ui->tableHeaders->item(i, 1)->text().toUtf8());
+    request.setHeader(QNetworkRequest::ContentTypeHeader, _ui->leContentType->text());
 
     _currentRequest->swap(request);
     _currentRequest->method = method.toLatin1();
