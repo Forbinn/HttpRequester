@@ -390,8 +390,13 @@ void RequestBuilder::_parameterItemChanged(QTableWidgetItem * item)
 
 void RequestBuilder::_requestContentChanged()
 {
-    const auto doc = QJsonDocument::fromJson(_ui->pteContent->toPlainText().toUtf8());
+    QJsonParseError error;
+    const auto doc = QJsonDocument::fromJson(_ui->pteContent->toPlainText().toUtf8(), &error);
     _ui->pbFormatJson->setEnabled(!doc.isNull());
+    if (error.error != QJsonParseError::NoError)
+        _ui->pbFormatJson->setToolTip(error.errorString());
+    else
+        _ui->pbFormatJson->setToolTip({});
 }
 
 bool RequestBuilder::_addEntryToTable(QTableWidget * table,
