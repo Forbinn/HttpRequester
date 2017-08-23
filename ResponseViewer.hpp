@@ -44,6 +44,9 @@ public slots:
     void setRequest(RequestPtr request);
     void handleReply(QNetworkReply * reply);
 
+    bool saveResponseContentToFile(const QString & filename,
+                                   QString * errorString = nullptr) const;
+
 protected:
     bool eventFilter(QObject * watched, QEvent * event) override;
 

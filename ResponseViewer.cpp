@@ -19,6 +19,8 @@
 #include <QJsonDocument>
 #include <QFontMetrics>
 #include <QResizeEvent>
+#include <QFileDialog>
+#include <QMessageBox>
 
 ResponseViewer::ResponseViewer(QWidget * parent) :
     QTabWidget(parent),
@@ -62,6 +64,19 @@ ResponseViewer::ResponseViewer(QWidget * parent) :
     QObject::connect(_ui->pbExpand, &QPushButton::clicked,
                      _ui->treeResponse, &QTreeView::expandAll);
 
+    QObject::connect(_ui->pbSave, &QPushButton::clicked, [this]
+    {
+        static auto directoryPath = QDir::homePath();
+        const auto filename = QFileDialog::getSaveFileName(this, "Save response content to file",
+                                                           directoryPath);
+        if (filename.isEmpty())
+            return ;
+        directoryPath = QFileInfo(filename).absoluteFilePath();
+        QString errorString;
+        if (!saveResponseContentToFile(filename, &errorString))
+            QMessageBox::critical(this, "Save failed", errorString);
+    });
+
     _ui->lUrl->installEventFilter(this);
 }
 
@@ -97,6 +112,46 @@ void ResponseViewer::handleReply(QNetworkReply * reply)
         _updateGui();
         emit replyReceived();
     });
+}
+
+bool ResponseViewer::saveResponseContentToFile(const QString & filename,
+                                               QString * errorString) const
+{
+    QString dummy;
+    QString & errString = errorString == nullptr ? dummy : *errorString;
+
+    if (_currentRequest == nullptr)
+    {
+        errString = "No response has been set yet";
+        return false;
+    }
+
+    QFile file(filename);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate))
+    {
+        errString = file.errorString();
+        return false;
+    }
+
+    const auto content = _currentRequest->responseContent;
+    switch (_ui->cbFormat->currentIndex())
+    {
+        case 1: // Indented
+        case 2: // Tree
+        {
+            const auto jsonDocument = QJsonDocument::fromJson(content);
+            if (jsonDocument.isNull())
+                file.write(content);
+            else
+                file.write(jsonDocument.toJson(QJsonDocument::Indented));
+        }
+            break;
+        default:
+            file.write(content);
+            break;
+    }
+
+    return true;
 }
 
 bool ResponseViewer::eventFilter(QObject * watched, QEvent * event)
