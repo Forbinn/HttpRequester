@@ -73,7 +73,8 @@ RequestBuilder::RequestBuilder(QWidget * parent) :
     // Browse file button
     QObject::connect(_ui->pbBrowseFile, &QPushButton::clicked, [this]
     {
-        static auto directoryPath = QDir::homePath();
+        static auto directoryPath = _ui->leFilePath->text().isEmpty() ? QDir::homePath()
+                                         : QFileInfo(_ui->leFilePath->text()).absoluteFilePath();
         const auto filename = QFileDialog::getOpenFileName(this, "Choose file", directoryPath);
         if (filename.isEmpty())
             return ;
