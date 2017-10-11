@@ -30,6 +30,7 @@
 #include <QStringListModel>
 #include <QList>
 #include <QJsonDocument>
+#include <QSet>
 
 // C++ standard library includes -----------------------------------------------
 #include <memory>
@@ -193,11 +194,11 @@ RequestBuilder::~RequestBuilder()
 
 void RequestBuilder::setRequestForCompletion(const QList<RequestPtr> & requests)
 {
-    QStringList urls;
+    QSet<QString> urls;
     for (const auto & request : requests)
-        urls.append(request->url().toString());
+        urls.insert(request->url().toString());
 
-    _urlCompletionModel->setStringList(urls);
+    _urlCompletionModel->setStringList(QStringList::fromSet(urls));
 }
 
 void RequestBuilder::displayRequest(RequestPtr request)
@@ -320,9 +321,9 @@ void RequestBuilder::_submitRequest(const QString & method)
     _currentRequest->date = QDateTime::currentDateTime();
     _currentRequest->displayFormat = -1;
 
-    auto currentCompletionList = _urlCompletionModel->stringList();
-    currentCompletionList.append(url.toString());
-    _urlCompletionModel->setStringList(currentCompletionList);
+    auto currentCompletionList = _urlCompletionModel->stringList().toSet();
+    currentCompletionList.insert(url.toString());
+    _urlCompletionModel->setStringList(QStringList::fromSet(currentCompletionList));
 
     auto internaleDevice = device.release();
     auto reply = _networkManager->sendCustomRequest(*_currentRequest, method.toUtf8(), internaleDevice);
