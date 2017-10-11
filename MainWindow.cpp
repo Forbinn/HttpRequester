@@ -15,6 +15,7 @@
 #include "HistoryViewer.hpp"
 
 // Qt includes -----------------------------------------------------------------
+#include <QApplication>
 #include <QSplitter>
 #include <QVBoxLayout>
 #include <QNetworkReply>
@@ -24,6 +25,7 @@
 #include <QDir>
 #include <QProgressDialog>
 #include <QSettings>
+#include <QShortcut>
 
 MainWindow::MainWindow() :
     _requestBuilder(new RequestBuilder(this)),
@@ -86,6 +88,9 @@ MainWindow::MainWindow() :
         _saveOrLoadHistoryData(true);
         _saveOrLoadWindow(true);
     });
+
+    auto quitShortcut = new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_Q), this);
+    QObject::connect(quitShortcut, &QShortcut::activated, qApp, &QApplication::quit);
 }
 
 void MainWindow::restoreState()
