@@ -28,10 +28,8 @@ HistoryViewer::HistoryViewer(QWidget * parent) :
     _requests.reserve(maxHistorySize);
 
     _ui->setupUi(this);
+    _ui->tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     _ui->tableWidget->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Stretch);
-    for (int i = 0; i < _ui->tableWidget->columnCount(); ++i)
-        if (i != 1)
-            _ui->tableWidget->horizontalHeader()->setSectionResizeMode(i, QHeaderView::ResizeToContents);
 
     QObject::connect(_ui->tableWidget, &QTableWidget::itemSelectionChanged,
                      this, &HistoryViewer::_itemSelectionChanged);
