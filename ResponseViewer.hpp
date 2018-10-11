@@ -13,6 +13,7 @@
 #include <QTabWidget>
 
 // Project includes ------------------------------------------------------------
+#include "ui_ResponseViewer.h"
 #include "Request.hpp"
 
 // Qt forward declarations -----------------------------------------------------
@@ -25,10 +26,6 @@ QT_END_NAMESPACE
 
 // Project forward declarations ------------------------------------------------
 class QJsonModel;
-namespace Ui
-{
-class ResponseViewer;
-}
 
 class ResponseViewer : public QTabWidget
 {
@@ -36,7 +33,6 @@ class ResponseViewer : public QTabWidget
 
 public:
     explicit ResponseViewer(QWidget * parent = nullptr);
-    ~ResponseViewer();
 
     RequestPtr request() const { return _currentRequest; }
 
@@ -64,8 +60,8 @@ signals:
     void replyReceived();
 
 private:
-    Ui::ResponseViewer * _ui;
-    QJsonModel         * _jsonModel;
+    Ui::ResponseViewer _ui;
+    QJsonModel       * _jsonModel;
 
-    RequestPtr           _currentRequest;
+    RequestPtr         _currentRequest;
 };

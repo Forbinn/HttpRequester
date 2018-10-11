@@ -14,6 +14,7 @@
 #include <QList>
 
 // Project includes ------------------------------------------------------------
+#include "ui_HistoryViewer.h"
 #include "Request.hpp"
 
 // Qt forward declarations -----------------------------------------------------
@@ -22,18 +23,12 @@ class QTableWidgetItem;
 class QKeyEvent;
 QT_END_NAMESPACE
 
-namespace Ui
-{
-class HistoryViewer;
-}
-
 class HistoryViewer : public QWidget
 {
     Q_OBJECT
 
 public:
     explicit HistoryViewer(QWidget * parent = nullptr);
-    ~HistoryViewer();
 
     bool hasRequest(RequestPtr request) const;
     void updateRequest(RequestPtr request);
@@ -61,7 +56,7 @@ signals:
     void currentChanged(RequestPtr request);
 
 private:
-    Ui::HistoryViewer * _ui;
+    Ui::HistoryViewer _ui;
 
     QList<RequestPtr> _requests;
 };

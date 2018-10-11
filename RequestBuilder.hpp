@@ -13,6 +13,7 @@
 #include <QWidget>
 
 // Project includes ------------------------------------------------------------
+#include "ui_RequestBuilder.h"
 #include "Request.hpp"
 
 // Qt forward declarations -----------------------------------------------------
@@ -25,19 +26,12 @@ class QStringListModel;
 class QEvent;
 QT_END_NAMESPACE
 
-// Project forward declarations ------------------------------------------------
-namespace Ui
-{
-class RequestBuilder;
-}
-
 class RequestBuilder : public QWidget
 {
     Q_OBJECT
 
 public:
     explicit RequestBuilder(QWidget * parent = nullptr);
-    ~RequestBuilder();
 
     RequestPtr request() const { return _currentRequest; }
 
@@ -70,7 +64,7 @@ signals:
     void requestSubmitted(QNetworkReply * reply);
 
 private:
-    Ui::RequestBuilder *    _ui;
+    Ui::RequestBuilder      _ui;
     QNetworkAccessManager * _networkManager;
 
     RequestPtr              _currentRequest;
