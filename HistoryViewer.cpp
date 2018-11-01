@@ -144,7 +144,7 @@ QTableWidgetItem * HistoryViewer::_createTableItem(const QString & text, bool da
     return item;
 }
 
-QString HistoryViewer::_formatSize(quint32 size)
+QString HistoryViewer::_formatSize(qint32 size)
 {
     if (size < 1024)
         return QString("%1 B").arg(size);

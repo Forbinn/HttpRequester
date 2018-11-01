@@ -47,7 +47,7 @@ private:
 
 private:
     static QTableWidgetItem * _createTableItem(const QString & text = {}, bool dateTime = false);
-    static QString _formatSize(quint32 size);
+    static QString _formatSize(qint32 size);
 
 private slots:
     void _itemSelectionChanged();
