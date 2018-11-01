@@ -96,7 +96,7 @@ void ResponseViewer::handleReply(QNetworkReply * reply)
         _currentRequest->reasonPhrase       = reply->attribute(QNetworkRequest::HttpReasonPhraseAttribute).toString();
         _currentRequest->responseContent    = reply->readAll();
         _currentRequest->responseHeaders    = reply->rawHeaderPairs();
-        _currentRequest->elapsedTime        = elapsedTimer.elapsed();
+        _currentRequest->elapsedTime        = static_cast<quint32>(elapsedTimer.elapsed());
 
         if (reply->error() != QNetworkReply::NoError && reply->error() < QNetworkReply::ProxyConnectionRefusedError)
             _currentRequest->reasonPhrase = reply->errorString();
