@@ -217,6 +217,10 @@ void ResponseViewer::_displayResponseData(const QByteArray & data)
                 else
                     _ui.stackedWidget->setCurrentIndex(1);
                 break;
+            case 3: // HTML
+                _ui.teHtmlResponse->setHtml(data);
+                _ui.stackedWidget->setCurrentIndex(2);
+                break;
             default:
                 break;
 
