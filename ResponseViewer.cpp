@@ -89,14 +89,12 @@ void ResponseViewer::handleReply(QNetworkReply * reply)
     QElapsedTimer elapsedTimer;
     elapsedTimer.start();
 
-    // TODO: timeout?
     QObject::connect(reply, &QNetworkReply::finished, [reply, elapsedTimer, this]
     {
         _currentRequest->hasReceiveResponse = true;
         _currentRequest->statusCode         = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toUInt();
         _currentRequest->reasonPhrase       = reply->attribute(QNetworkRequest::HttpReasonPhraseAttribute).toString();
         _currentRequest->responseContent    = reply->readAll();
-        // TODO: this does not show ALL header
         _currentRequest->responseHeaders    = reply->rawHeaderPairs();
         _currentRequest->elapsedTime        = elapsedTimer.elapsed();
 
