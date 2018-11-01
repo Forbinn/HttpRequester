@@ -12,7 +12,6 @@
 // Qt includes -----------------------------------------------------------------
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
-#include <QSignalMapper>
 #include <QMessageBox>
 #include <QBuffer>
 #include <QFile>
@@ -80,20 +79,12 @@ RequestBuilder::RequestBuilder(QWidget * parent) :
     });
 
     // Push button GET, POST, PUT, Submit
-    auto signalMapper = new QSignalMapper(this);
-    signalMapper->setMapping(_ui.pbGet,  _ui.pbGet->text());
-    signalMapper->setMapping(_ui.pbPost, _ui.pbPost->text());
-    signalMapper->setMapping(_ui.pbPut,  _ui.pbPut->text());
-
-    QObject::connect(_ui.pbGet,  &QPushButton::clicked, signalMapper,
-                     static_cast<void(QSignalMapper::*)()>(&QSignalMapper::map));
-    QObject::connect(_ui.pbPost, &QPushButton::clicked, signalMapper,
-                     static_cast<void(QSignalMapper::*)()>(&QSignalMapper::map));
-    QObject::connect(_ui.pbPut,  &QPushButton::clicked, signalMapper,
-                     static_cast<void(QSignalMapper::*)()>(&QSignalMapper::map));
-    QObject::connect(signalMapper,
-                     static_cast<void(QSignalMapper::*)(const QString &)>(&QSignalMapper::mapped),
-                     this, &RequestBuilder::_submitRequest);
+    QObject::connect(_ui.pbGet, &QPushButton::clicked,
+                     [this]{ _submitRequest(_ui.pbGet->text()); });
+    QObject::connect(_ui.pbPost, &QPushButton::clicked,
+                     [this]{ _submitRequest(_ui.pbPost->text()); });
+    QObject::connect(_ui.pbPut,  &QPushButton::clicked,
+                     [this]{ _submitRequest(_ui.pbPut->text()); });
     QObject::connect(_ui.pbSubmit, &QPushButton::clicked, [this]
     { _submitRequest(_ui.cbMethod->currentText()); });
 
