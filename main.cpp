@@ -10,17 +10,10 @@
 
 // Qt includes -----------------------------------------------------------------
 #include <QApplication>
-#include <QWidget>
-#include <QStyleFactory>
 #include <QFileInfo>
 
 // C++ standard library includes -----------------------------------------------
 #include <csignal>
-
-namespace
-{
-    constexpr const auto styleName = "Adwaita-Dark";
-}
 
 int main(int ac, char * av[])
 {
@@ -33,9 +26,6 @@ int main(int ac, char * av[])
     QApplication::setOrganizationName("vivoka");
     QApplication::setApplicationName(QFileInfo(av[0]).baseName());
     QApplication::setApplicationVersion("1.6");
-
-    if (QStyleFactory::keys().contains(styleName))
-        QApplication::setStyle(QStyleFactory::create(styleName));
 
     MainWindow w;
     w.restoreState();
