@@ -9,50 +9,28 @@
 
 #include "MainWindow.hpp"
 
-// Project includes ------------------------------------------------------------
-#include "RequestBuilder.hpp"
-#include "ResponseViewer.hpp"
-#include "HistoryViewer.hpp"
-
 // Qt includes -----------------------------------------------------------------
 #include <QApplication>
-#include <QSplitter>
-#include <QVBoxLayout>
 #include <QNetworkReply>
 #include <QStandardPaths>
 #include <QFile>
-#include <QCoreApplication>
 #include <QDir>
-#include <QProgressDialog>
 #include <QSettings>
 #include <QShortcut>
+#include <QProgressDialog>
 
-MainWindow::MainWindow() :
-    _requestBuilder(new RequestBuilder(this)),
-    _responseViewer(new ResponseViewer(this)),
-    _historyViewer(new HistoryViewer(this))
+MainWindow::MainWindow()
 {
-    auto hSplitter = new QSplitter(Qt::Horizontal, this);
-    hSplitter->setChildrenCollapsible(false);
-    hSplitter->addWidget(_requestBuilder);
-    hSplitter->addWidget(_responseViewer);
+    _ui.setupUi(this);
 
-    auto vSplitter = new QSplitter(Qt::Vertical, this);
-    vSplitter->setChildrenCollapsible(false);
-    vSplitter->addWidget(hSplitter);
-    vSplitter->addWidget(_historyViewer);
-
-    setLayout(new QVBoxLayout);
-    layout()->addWidget(vSplitter);
-
-    QObject::connect(_requestBuilder, &RequestBuilder::requestSubmitted, [this](QNetworkReply * reply)
+    QObject::connect(_ui.requestBuilder, &RequestBuilder::requestSubmitted, [this](QNetworkReply * reply)
     {
-        _responseViewer->setRequest(_requestBuilder->request());
-        _responseViewer->handleReply(reply);
-        if (!_historyViewer->hasRequest(_requestBuilder->request()))
-            _historyViewer->addRequest(_requestBuilder->request());
+        _ui.responseViewer->setRequest(_ui.requestBuilder->request());
+        _ui.responseViewer->handleReply(reply);
+        if (!_ui.historyViewer->hasRequest(_ui.requestBuilder->request()))
+            _ui.historyViewer->addRequest(_ui.requestBuilder->request());
         else
-            _historyViewer->updateRequest(_requestBuilder->request());
+            _ui.historyViewer->updateRequest(_ui.requestBuilder->request());
 
         _dialog = new QProgressDialog(this);
         _dialog->setModal(true);
@@ -70,17 +48,17 @@ MainWindow::MainWindow() :
         QObject::connect(_dialog, &QProgressDialog::canceled, reply, &QNetworkReply::abort);
     });
 
-    QObject::connect(_responseViewer, &ResponseViewer::replyReceived, [this]
+    QObject::connect(_ui.responseViewer, &ResponseViewer::replyReceived, [this]
     {
         _dialog->close();
         _dialog->deleteLater();
-        _historyViewer->updateRequest(_responseViewer->request());
+        _ui.historyViewer->updateRequest(_ui.responseViewer->request());
     });
 
-    QObject::connect(_historyViewer, &HistoryViewer::currentChanged, [this](RequestPtr request)
+    QObject::connect(_ui.historyViewer, &HistoryViewer::currentChanged, [this](RequestPtr request)
     {
-        _responseViewer->setRequest(request);
-        _requestBuilder->displayRequest(request);
+        _ui.responseViewer->setRequest(request);
+        _ui.requestBuilder->displayRequest(request);
     });
 
     QObject::connect(qApp, &QCoreApplication::aboutToQuit, [this]
@@ -98,12 +76,12 @@ void MainWindow::restoreState()
     _saveOrLoadHistoryData(false);
     _saveOrLoadWindow(false);
 
-    _requestBuilder->setRequestForCompletion(_historyViewer->request());
+    _ui.requestBuilder->setRequestForCompletion(_ui.historyViewer->request());
 }
 
 void MainWindow::_saveOrLoadHistoryData(bool save)
 {
-    static const auto filename = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/request_history";
+    static const auto filename = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/request_ui.history";
     if (save)
     {
         const auto absolutePath = QFileInfo(filename).absolutePath();
@@ -131,9 +109,9 @@ void MainWindow::_saveOrLoadHistoryData(bool save)
     stream.setVersion(QDataStream::Qt_5_6);
 
     if (save)
-        _historyViewer->save(stream);
+        _ui.historyViewer->save(stream);
     else
-        _historyViewer->load(stream);
+        _ui.historyViewer->load(stream);
 }
 
 void MainWindow::_saveOrLoadWindow(bool save)

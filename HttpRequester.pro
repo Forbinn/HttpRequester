@@ -29,4 +29,5 @@ HEADERS += \
 FORMS += \
     RequestBuilder.ui \
     ResponseViewer.ui \
-    HistoryViewer.ui
+    HistoryViewer.ui \
+    MainWindow.ui

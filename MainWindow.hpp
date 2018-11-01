@@ -12,15 +12,11 @@
 // Qt includes -----------------------------------------------------------------
 #include <QWidget>
 
-// Qt forward declarations -----------------------------------------------------
-QT_BEGIN_NAMESPACE
-class QProgressDialog;
-QT_END_NAMESPACE
+// Project includes ------------------------------------------------------------
+#include "ui_MainWindow.h"
 
-// Project forward declarations ------------------------------------------------
-class RequestBuilder;
-class ResponseViewer;
-class HistoryViewer;
+// Qt forward declarations -----------------------------------------------------
+class QProgressDialog;
 
 class MainWindow : public QWidget
 {
@@ -36,9 +32,7 @@ private:
     void _saveOrLoadWindow(bool save);
 
 private:
-    RequestBuilder *  _requestBuilder;
-    ResponseViewer *  _responseViewer;
-    HistoryViewer *   _historyViewer;
+    Ui::MainWindow _ui;
 
     QProgressDialog * _dialog;
 };
