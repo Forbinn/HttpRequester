@@ -11,6 +11,7 @@
 
 // Qt includes -----------------------------------------------------------------
 #include <QWidget>
+#include <QMap>
 
 // Project includes ------------------------------------------------------------
 #include "ui_RequestBuilder.h"
@@ -30,6 +31,8 @@ class RequestBuilder : public QWidget
 {
     Q_OBJECT
 
+    using EventFilter = bool (RequestBuilder::*)(QEvent *);
+
 public:
     explicit RequestBuilder(QWidget * parent = nullptr);
 
@@ -48,6 +51,12 @@ private:
     void _urlChanged(const QString & rawUrl);
     void _parameterItemChanged(QTableWidgetItem * item);
     void _requestContentChanged();
+
+    void _installEventFiler(QObject * obj, EventFilter filterFunc);
+    bool _filterTableHeadersEvent(QEvent * event);
+    bool _filterTableParametersEvent(QEvent * event);
+    bool _filterLeUrlEvent(QEvent * event);
+    bool _filterLeContentTypeEvent(QEvent * event);
 
 private:
     static bool _addEntryToTable(QTableWidget * table,
@@ -69,4 +78,6 @@ private:
 
     RequestPtr              _currentRequest;
     QStringListModel *      _urlCompletionModel;
+
+    QMap<QObject *, EventFilter> _eventFilters;
 };

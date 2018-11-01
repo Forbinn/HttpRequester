@@ -169,9 +169,10 @@ RequestBuilder::RequestBuilder(QWidget * parent) :
     QObject::connect(_ui.tableParameters, &QTableWidget::itemChanged,
                      this, &RequestBuilder::_parameterItemChanged);
 
-    _ui.tableHeaders->installEventFilter(this);
-    _ui.tableParameters->installEventFilter(this);
-    _ui.leUrl->installEventFilter(this);
+    _installEventFiler(_ui.tableHeaders, &RequestBuilder::_filterTableHeadersEvent);
+    _installEventFiler(_ui.tableParameters, &RequestBuilder::_filterTableParametersEvent);
+    _installEventFiler(_ui.leUrl, &RequestBuilder::_filterLeUrlEvent);
+    _installEventFiler(_ui.leContentType, &RequestBuilder::_filterLeContentTypeEvent);
 }
 
 void RequestBuilder::setRequestForCompletion(const QList<RequestPtr> & requests)
@@ -213,25 +214,68 @@ void RequestBuilder::displayRequest(RequestPtr request)
 
 bool RequestBuilder::eventFilter(QObject * watched, QEvent * event)
 {
-    if (event->type() != QEvent::KeyPress)
-        return QObject::eventFilter(watched, event);
+    return (this->*_eventFilters.value(watched))(event);
+}
 
-    QKeyEvent * keyEvent = static_cast<QKeyEvent *>(event);
+bool RequestBuilder::_filterTableHeadersEvent(QEvent * event)
+{
+    if (event->type() != QEvent::KeyPress)
+        return QObject::eventFilter(_ui.tableHeaders, event);
+
+    const auto * keyEvent = static_cast<QKeyEvent *>(event);
     if (keyEvent->matches(QKeySequence::Delete))
     {
-        if (watched == _ui.tableHeaders)
-            _ui.pbDeleteHeaders->click();
-        else if (watched == _ui.tableParameters)
-            _ui.pbDeleteParameters->click();
-        else
-            return false;
+        _ui.pbDeleteHeaders->click();
+        return true;
     }
-    else if (keyEvent->key() == Qt::Key_Return || keyEvent->key() == Qt::Key_Enter)
+
+    return QObject::eventFilter(_ui.tableHeaders, event);
+}
+
+bool RequestBuilder::_filterTableParametersEvent(QEvent * event)
+{
+    if (event->type() != QEvent::KeyPress)
+        return QObject::eventFilter(_ui.tableParameters, event);
+
+    const auto * keyEvent = static_cast<QKeyEvent *>(event);
+    if (keyEvent->matches(QKeySequence::Delete))
+    {
+        _ui.pbDeleteParameters->click();
+        return true;
+    }
+
+    return QObject::eventFilter(_ui.tableParameters, event);
+}
+
+bool RequestBuilder::_filterLeUrlEvent(QEvent * event)
+{
+    if (event->type() != QEvent::KeyPress)
+        return QObject::eventFilter(_ui.leUrl, event);
+
+    const auto * keyEvent = static_cast<QKeyEvent *>(event);
+    if (keyEvent->key() == Qt::Key_Return || keyEvent->key() == Qt::Key_Enter)
         _submitRequest(_ui.cbMethod->currentText());
+    else if (keyEvent->key() == Qt::Key_Down)
+        _ui.leUrl->completer()->complete();
     else
-        return QObject::eventFilter(watched, event);
+        return QObject::eventFilter(_ui.leUrl, event);
 
     return true;
+}
+
+bool RequestBuilder::_filterLeContentTypeEvent(QEvent * event)
+{
+    if (event->type() != QEvent::KeyPress)
+        return QObject::eventFilter(_ui.leContentType, event);
+
+    const auto * keyEvent = static_cast<QKeyEvent *>(event);
+    if (keyEvent->key() == Qt::Key_Down)
+    {
+        _ui.leContentType->completer()->complete();
+        return true;
+    }
+
+    return QObject::eventFilter(_ui.leContentType, event);
 }
 
 void RequestBuilder::_submitRequest(const QString & method)
@@ -380,6 +424,12 @@ void RequestBuilder::_requestContentChanged()
         _ui.pbFormatJson->setToolTip(error.errorString());
     else
         _ui.pbFormatJson->setToolTip({});
+}
+
+void RequestBuilder::_installEventFiler(QObject * obj, EventFilter filterFunc)
+{
+    _eventFilters.insert(obj, filterFunc);
+    obj->installEventFilter(this);
 }
 
 bool RequestBuilder::_addEntryToTable(QTableWidget * table,
