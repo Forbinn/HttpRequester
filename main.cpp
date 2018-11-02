@@ -25,7 +25,7 @@ int main(int ac, char * av[])
     QApplication::setOrganizationDomain("vivoka.com");
     QApplication::setOrganizationName("vivoka");
     QApplication::setApplicationName(QFileInfo(av[0]).baseName());
-    QApplication::setApplicationVersion("1.6");
+    QApplication::setApplicationVersion("1.7");
 
     MainWindow w;
     w.restoreState();
