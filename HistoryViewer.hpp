@@ -11,7 +11,7 @@
 
 // Qt includes -----------------------------------------------------------------
 #include <QWidget>
-#include <QList>
+#include <QVector>
 
 // Project includes ------------------------------------------------------------
 #include "ui_HistoryViewer.h"
@@ -28,12 +28,12 @@ class HistoryViewer : public QWidget
     Q_OBJECT
 
 public:
-    explicit HistoryViewer(QWidget * parent = nullptr);
+    HistoryViewer(QWidget * parent = nullptr);
 
     bool hasRequest(RequestPtr request) const;
     void updateRequest(RequestPtr request);
     void addRequest(RequestPtr request);
-    const QList<RequestPtr> & request() const { return _requests; }
+    const QVector<RequestPtr> & request() const { return _requests; }
 
 public slots:
     void load(QDataStream & in);
@@ -58,5 +58,5 @@ signals:
 private:
     Ui::HistoryViewer _ui;
 
-    QList<RequestPtr> _requests;
+    QVector<RequestPtr> _requests;
 };

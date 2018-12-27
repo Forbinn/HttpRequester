@@ -175,7 +175,7 @@ RequestBuilder::RequestBuilder(QWidget * parent) :
     _installEventFiler(_ui.leContentType, &RequestBuilder::_filterLeContentTypeEvent);
 }
 
-void RequestBuilder::setRequestForCompletion(const QList<RequestPtr> & requests)
+void RequestBuilder::setRequestForCompletion(const QVector<RequestPtr> & requests)
 {
     QSet<QString> urls;
     for (const auto & request : requests)

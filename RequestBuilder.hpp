@@ -38,7 +38,7 @@ public:
 
     RequestPtr request() const { return _currentRequest; }
 
-    void setRequestForCompletion(const QList<RequestPtr> & requests);
+    void setRequestForCompletion(const QVector<RequestPtr> & requests);
 
 public slots:
     void displayRequest(RequestPtr request);
