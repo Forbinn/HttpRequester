@@ -52,6 +52,9 @@ private:
 private slots:
     void _itemSelectionChanged();
 
+    void _onPbClearClicked();
+    void _onPbDeleteClicked();
+
 signals:
     void currentChanged(RequestPtr request);
 

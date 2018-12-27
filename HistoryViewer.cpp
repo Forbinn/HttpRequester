@@ -33,29 +33,16 @@ HistoryViewer::HistoryViewer(QWidget * parent) :
                      this, &HistoryViewer::_itemSelectionChanged);
 
     // Clear history button
-    QObject::connect(_ui.pbClear, &QPushButton::clicked, [this]
+    QObject::connect(_ui.pbClear, &QPushButton::clicked,
+                     this, &HistoryViewer::_onPbClearClicked);
+    // Delete request button
+    QObject::connect(_ui.pbDelete, &QPushButton::clicked,
+                     this, &HistoryViewer::_onPbDeleteClicked);
     {
-        _ui.tableWidget->clearContents();
-        _ui.tableWidget->setRowCount(0);
-        _requests.clear();
-        _ui.pbClear->setEnabled(false);
     });
     // Delete request button
     QObject::connect(_ui.pbDelete, &QPushButton::clicked, [this]
     {
-        const auto row = _ui.tableWidget->currentRow();
-        _requests.removeAt(row);
-
-        QObject::disconnect(_ui.tableWidget, &QTableWidget::itemSelectionChanged,
-                            this, &HistoryViewer::_itemSelectionChanged);
-        _ui.tableWidget->removeRow(row);
-        QObject::connect(_ui.tableWidget, &QTableWidget::itemSelectionChanged,
-                         this, &HistoryViewer::_itemSelectionChanged);
-
-        if (_ui.tableWidget->rowCount() == 0)
-            _ui.pbClear->setEnabled(false);
-
-        _itemSelectionChanged();
     });
 }
 
@@ -167,4 +154,29 @@ void HistoryViewer::_itemSelectionChanged()
     const auto row = _ui.tableWidget->currentRow();
     if (row < _requests.size())
         emit currentChanged(_requests.at(row));
+}
+
+void HistoryViewer::_onPbClearClicked()
+{
+    _ui.tableWidget->clearContents();
+    _ui.tableWidget->setRowCount(0);
+    _requests.clear();
+    _ui.pbClear->setEnabled(false);
+}
+
+void HistoryViewer::_onPbDeleteClicked()
+{
+    const auto row = _ui.tableWidget->currentRow();
+    _requests.removeAt(row);
+
+    QObject::disconnect(_ui.tableWidget, &QTableWidget::itemSelectionChanged,
+                        this, &HistoryViewer::_itemSelectionChanged);
+    _ui.tableWidget->removeRow(row);
+    QObject::connect(_ui.tableWidget, &QTableWidget::itemSelectionChanged,
+                     this, &HistoryViewer::_itemSelectionChanged);
+
+    if (_ui.tableWidget->rowCount() == 0)
+        _ui.pbClear->setEnabled(false);
+
+    _itemSelectionChanged();
 }
