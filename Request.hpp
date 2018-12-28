@@ -14,6 +14,7 @@
 #include <QList>
 #include <QDateTime>
 #include <QDataStream>
+#include <QJsonObject>
 
 // C++ standard library includes -----------------------------------------------
 #include <memory>
@@ -38,6 +39,9 @@ struct Request : public QNetworkRequest
     quint32    elapsedTime;
 
     qint32     displayFormat;
+
+    QJsonObject toJson() const;
+    void fromJson(const QJsonObject & json);
 };
 
 using RequestPtr = std::shared_ptr<Request>;

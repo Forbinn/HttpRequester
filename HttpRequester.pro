@@ -23,7 +23,8 @@ HEADERS += \
     HistoryViewer.hpp \
     Request.hpp \
     QJsonModel.hpp \
-    DateTimeItem.hpp
+    DateTimeItem.hpp \
+    Constants.hpp
 
 FORMS += \
     RequestBuilder.ui \

@@ -9,6 +9,99 @@
 
 #include "Request.hpp"
 
+// Project includes ------------------------------------------------------------
+#include "Constants.hpp"
+
+namespace
+{
+QJsonObject headerToJson(const Request::Headers & headers)
+{
+    QJsonObject json;
+    for (const auto & header : headers)
+        json.insert(header.first.constData(), header.second.toBase64().constData());
+    return json;
+}
+
+QJsonObject headerToJson(const QNetworkRequest & request)
+{
+    QJsonObject json;
+    const auto headerNameList = request.rawHeaderList();
+    for (const auto & headerName : headerNameList)
+        json.insert(headerName.constData(), request.rawHeader(headerName).toBase64().constData());
+    return json;
+}
+
+Request::Headers headerFromJson(const QJsonObject & json)
+{
+    Request::Headers headers;
+    for (auto itr = json.begin(); itr != json.end(); ++itr)
+        headers.append({itr.key().toUtf8(),
+                        QByteArray::fromBase64(itr.value().toString().toUtf8())});
+    return headers;
+}
+
+void headerFromJson(const QJsonObject & json, QNetworkRequest & request)
+{
+    for (auto itr = json.begin(); itr != json.end(); ++itr)
+        request.setRawHeader(itr.key().toUtf8(),
+                             QByteArray::fromBase64(itr.value().toString().toUtf8()));
+}
+
+void from18Request(const QJsonObject & json, Request & request)
+{
+    const auto jsonRequest  = json.value(Keys::request).toObject();
+    const auto jsonResponse = json.value(Keys::response).toObject();
+
+    request.method            = jsonRequest.value(Keys::requestMethod).toString().toUtf8();
+    request.contentIsFilename = jsonRequest.value(Keys::requestContentIsFilename).toBool();
+    request.content           = QByteArray::fromBase64(jsonRequest.value(Keys::requestContent).toString().toUtf8());
+    request.setUrl(jsonRequest.value(Keys::requestUrl).toString());
+    headerFromJson(jsonRequest.value(Keys::requestHeaders).toObject(), request);
+
+    request.statusCode      = static_cast<quint32>(json.value(Keys::responseStatus).toInt());
+    request.reasonPhrase    = json.value(Keys::responseReason).toString();
+    request.responseContent = QByteArray::fromBase64(json.value(Keys::responseContent).toString().toUtf8());
+    request.responseHeaders = headerFromJson(jsonResponse.value(Keys::responseHeaders).toObject());
+
+    request.date          = QDateTime::fromString(json.value(Keys::requestDate).toString(), Constants::exportDateFormat);
+    request.elapsedTime   = static_cast<quint32>(json.value(Keys::requestElaspedTime).toInt());
+    request.displayFormat = json.value(Keys::responseDisplayFormat).toInt();
+}
+} // !namespace
+
+QJsonObject Request::toJson() const
+{
+    const QJsonObject jsonRequest{
+        { Keys::requestMethod,            method.constData()             },
+        { Keys::requestUrl,               url().toString()               },
+        { Keys::requestContentIsFilename, contentIsFilename              },
+        { Keys::requestContent,           content.toBase64().constData() },
+        { Keys::requestHeaders,           headerToJson(*this)            }
+    };
+    const QJsonObject jsonResponse{
+        { Keys::responseStatus,  static_cast<qint32>(statusCode)        },
+        { Keys::responseReason,  reasonPhrase                           },
+        { Keys::responseContent, responseContent.toBase64().constData() },
+        { Keys::responseHeaders, headerToJson(responseHeaders)          }
+    };
+
+    return QJsonObject{
+        { Keys::request,               jsonRequest                                        },
+        { Keys::response,              jsonResponse                                       },
+        { Keys::requestDate,           date.toUTC().toString(Constants::exportDateFormat) },
+        { Keys::requestElaspedTime,    static_cast<qint32>(elapsedTime)                   },
+        { Keys::responseDisplayFormat, displayFormat                                      },
+        { Keys::exportVersion,         Constants::applicationVersion                      }
+    };
+}
+
+void Request::fromJson(const QJsonObject & json)
+{
+    const auto version = json.value(Keys::exportVersion).toString();
+    if (version == "1.8")
+        from18Request(json, *this);
+}
+
 QDataStream & operator<<(QDataStream & out, const Request & request)
 {
     out << request.url();

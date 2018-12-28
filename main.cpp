@@ -7,6 +7,7 @@
 
 // Project includes ------------------------------------------------------------
 #include "MainWindow.hpp"
+#include "Constants.hpp"
 
 // Qt includes -----------------------------------------------------------------
 #include <QApplication>
@@ -25,7 +26,7 @@ int main(int ac, char * av[])
     QApplication::setOrganizationDomain("vivoka.com");
     QApplication::setOrganizationName("vivoka");
     QApplication::setApplicationName(QFileInfo(av[0]).baseName());
-    QApplication::setApplicationVersion("1.7");
+    QApplication::setApplicationVersion(Constants::applicationVersion);
 
     MainWindow w;
     w.restoreState();
