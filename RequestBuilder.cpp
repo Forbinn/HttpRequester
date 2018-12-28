@@ -278,11 +278,12 @@ bool RequestBuilder::_filterLeContentTypeEvent(QEvent * event)
     return QObject::eventFilter(_ui.leContentType, event);
 }
 
-void RequestBuilder::_submitRequest(const QString & method)
+void RequestBuilder::_submitRequest(QString method)
 {
     _currentRequest = std::make_shared<Request>();
     _ui.cbMethod->setCurrentText(method);
 
+    method.remove('&');
     QString errorString;
     const auto url = [this]
     {

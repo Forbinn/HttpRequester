@@ -47,7 +47,7 @@ protected:
     bool eventFilter(QObject * watched, QEvent * event) override;
 
 private:
-    void _submitRequest(const QString & method);
+    void _submitRequest(QString method);
     void _urlChanged(const QString & rawUrl);
     void _parameterItemChanged(QTableWidgetItem * item);
     void _requestContentChanged();
