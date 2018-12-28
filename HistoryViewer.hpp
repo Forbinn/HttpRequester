@@ -44,6 +44,9 @@ protected:
 
 private:
     void _addRequestToTable(const RequestPtr request);
+    int _getRequestIdxForItem(const QTableWidgetItem * item) const;
+    Request * _getRequestForItem(const QTableWidgetItem * item) const;
+    int _getRowForRequest(const RequestPtr request) const;
 
 private:
     static QTableWidgetItem * _createTableItem(const QString & text = {}, bool dateTime = false);

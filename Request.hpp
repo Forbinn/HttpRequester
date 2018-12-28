@@ -50,3 +50,5 @@ QDataStream & operator<<(QDataStream & out, const Request & request);
 QDataStream & operator>>(QDataStream & in, Request & request);
 QDataStream & operator<<(QDataStream & out, const RequestPtr & request);
 QDataStream & operator>>(QDataStream & in, RequestPtr & request);
+
+Q_DECLARE_METATYPE(Request *);

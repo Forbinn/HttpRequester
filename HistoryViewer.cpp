@@ -43,17 +43,15 @@ bool HistoryViewer::hasRequest(RequestPtr request) const
 
 void HistoryViewer::updateRequest(RequestPtr request)
 {
-    const int index = _requests.indexOf(request);
-    if (Q_UNLIKELY(index == -1))
-        return ;
+    const auto row = _getRowForRequest(request);
 
-    _ui.tableWidget->item(index, 0)->setText(request->method.constData());
-    _ui.tableWidget->item(index, 1)->setText(request->url().toString());
-    _ui.tableWidget->item(index, 2)->setText(QString("%1 %2").arg(request->statusCode)
+    _ui.tableWidget->item(row, 0)->setText(request->method.constData());
+    _ui.tableWidget->item(row, 1)->setText(request->url().toString());
+    _ui.tableWidget->item(row, 2)->setText(QString("%1 %2").arg(request->statusCode)
                                                        .arg(request->reasonPhrase));
-    _ui.tableWidget->item(index, 3)->setText(request->date.toString(DateTimeItem::dateFormat));
-    _ui.tableWidget->item(index, 4)->setText(_formatSize(request->responseContent.size()));
-    _ui.tableWidget->item(index, 5)->setText(QString("%1 ms").arg(request->elapsedTime));
+    _ui.tableWidget->item(row, 3)->setText(request->date.toString(DateTimeItem::dateFormat));
+    _ui.tableWidget->item(row, 4)->setText(_formatSize(request->responseContent.size()));
+    _ui.tableWidget->item(row, 5)->setText(QString("%1 ms").arg(request->elapsedTime));
 
     _ui.tableWidget->viewport()->update();
 }
@@ -64,14 +62,16 @@ void HistoryViewer::addRequest(RequestPtr request)
     {
         QObject::disconnect(_ui.tableWidget, &QTableWidget::itemSelectionChanged,
                             this, &HistoryViewer::_itemSelectionChanged);
-        _ui.tableWidget->removeRow(_ui.tableWidget->rowCount() - 1);
+        const auto rowToRemove = _ui.tableWidget->rowCount() - 1;
+        const auto requestIdx  = _getRequestIdxForItem(_ui.tableWidget->item(rowToRemove, 0));
+        _ui.tableWidget->removeRow(rowToRemove);
+        _requests.remove(requestIdx);
         QObject::connect(_ui.tableWidget, &QTableWidget::itemSelectionChanged,
                             this, &HistoryViewer::_itemSelectionChanged);
-        _requests.pop_back();
     }
 
-    _requests.push_front(request);
     _addRequestToTable(request);
+    _requests.push_back(request);
 
     _ui.tableWidget->selectRow(0);
 }
@@ -109,9 +109,38 @@ void HistoryViewer::_addRequestToTable(const RequestPtr request)
     _ui.tableWidget->setItem(row, 4, _createTableItem(_formatSize(request->responseContent.size())));
     _ui.tableWidget->setItem(row, 5, _createTableItem(QString("%1 ms").arg(request->elapsedTime)));
 
+    _ui.tableWidget->item(row, 0)->setData(Qt::UserRole, QVariant::fromValue(request.get()));
+
     _ui.pbClear->setEnabled(true);
     _ui.tableWidget->sortItems(3, Qt::DescendingOrder);
     _ui.tableWidget->viewport()->update();
+}
+
+int HistoryViewer::_getRequestIdxForItem(const QTableWidgetItem * item) const
+{
+    struct NoOpDeleter
+    { void operator()(Request *) const {} };
+
+    const auto request = _getRequestForItem(item);
+    return _requests.indexOf(std::shared_ptr<Request>(request, NoOpDeleter{}));
+}
+
+Request * HistoryViewer::_getRequestForItem(const QTableWidgetItem * item) const
+{
+    const auto firstItem = item->column() == 0 ? item : _ui.tableWidget->item(item->row(), 0);
+    return qvariant_cast<Request *>(firstItem->data(Qt::UserRole));
+}
+
+int HistoryViewer::_getRowForRequest(const RequestPtr request) const
+{
+    for (int row = 0; row < _ui.tableWidget->rowCount(); ++row)
+    {
+        const auto item = _ui.tableWidget->item(row, 0);
+        if (qvariant_cast<Request *>(item->data(Qt::UserRole)) == request.get())
+            return row;
+    }
+
+    return -1;
 }
 
 QTableWidgetItem * HistoryViewer::_createTableItem(const QString & text, bool dateTime)
@@ -141,9 +170,8 @@ void HistoryViewer::_itemSelectionChanged()
     if (!areItemSelected)
         return ;
 
-    const auto row = _ui.tableWidget->currentRow();
-    if (row < _requests.size())
-        emit currentChanged(_requests.at(row));
+    const auto idx = _getRequestIdxForItem(_ui.tableWidget->currentItem());
+    emit currentChanged(_requests.at(idx));
 }
 
 void HistoryViewer::_onPbClearClicked()
@@ -156,12 +184,12 @@ void HistoryViewer::_onPbClearClicked()
 
 void HistoryViewer::_onPbDeleteClicked()
 {
-    const auto row = _ui.tableWidget->currentRow();
-    _requests.removeAt(row);
+    const auto idx = _getRequestIdxForItem(_ui.tableWidget->currentItem());
+    _requests.removeAt(idx);
 
     QObject::disconnect(_ui.tableWidget, &QTableWidget::itemSelectionChanged,
                         this, &HistoryViewer::_itemSelectionChanged);
-    _ui.tableWidget->removeRow(row);
+    _ui.tableWidget->removeRow(_ui.tableWidget->currentRow());
     QObject::connect(_ui.tableWidget, &QTableWidget::itemSelectionChanged,
                      this, &HistoryViewer::_itemSelectionChanged);
 
