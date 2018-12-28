@@ -352,10 +352,10 @@ void RequestBuilder::_submitRequest(QString method)
     currentCompletionList.insert(url.toString());
     _urlCompletionModel->setStringList(QStringList::fromSet(currentCompletionList));
 
-    auto internaleDevice = device.release();
-    auto reply = _networkManager->sendCustomRequest(*_currentRequest, method.toUtf8(), internaleDevice);
-    if (internaleDevice != nullptr)
-        QObject::connect(reply, &QNetworkReply::finished, internaleDevice, &QObject::deleteLater);
+    auto internalDevice = device.release();
+    auto reply = _networkManager->sendCustomRequest(*_currentRequest, method.toUtf8(), internalDevice);
+    if (internalDevice != nullptr)
+        QObject::connect(reply, &QNetworkReply::finished, internalDevice, &QObject::deleteLater);
 
     emit requestSubmitted(reply);
     _currentRequest.reset();
