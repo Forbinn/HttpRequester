@@ -10,20 +10,16 @@
 #include "HistoryViewer.hpp"
 
 // Project includes ------------------------------------------------------------
+#include "Constants.hpp"
 #include "DateTimeItem.hpp"
 
 // Qt includes -----------------------------------------------------------------
 #include <QKeyEvent>
 
-namespace
-{
-    constexpr const auto maxHistorySize = 100;
-}
-
 HistoryViewer::HistoryViewer(QWidget * parent) :
     QWidget(parent)
 {
-    _requests.reserve(maxHistorySize);
+    _requests.reserve(Constants::maxHistorySize);
 
     _ui.setupUi(this);
     _ui.tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
@@ -64,7 +60,7 @@ void HistoryViewer::updateRequest(RequestPtr request)
 
 void HistoryViewer::addRequest(RequestPtr request)
 {
-    if (_requests.size() >= maxHistorySize)
+    if (_requests.size() >= Constants::maxHistorySize)
     {
         QObject::disconnect(_ui.tableWidget, &QTableWidget::itemSelectionChanged,
                             this, &HistoryViewer::_itemSelectionChanged);

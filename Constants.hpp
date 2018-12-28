@@ -30,6 +30,7 @@ namespace Keys
 
 namespace Constants
 {
+    constexpr const auto maxHistorySize     = 100;
     constexpr const auto applicationVersion = "1.8";
     constexpr const auto exportDateFormat   = "dd-MM-yyyyTHH:mm:ss.zzz";
 } // !namespace Constants
