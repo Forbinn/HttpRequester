@@ -44,6 +44,8 @@ protected:
 
 private:
     void _addRequestToTable(const RequestPtr request);
+    void _fillTableRow(int row, const RequestPtr request);
+
     int _getRequestIdxForItem(const QTableWidgetItem * item) const;
     Request * _getRequestForItem(const QTableWidgetItem * item) const;
     int _getRowForRequest(const RequestPtr request) const;
