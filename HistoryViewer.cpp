@@ -38,12 +38,6 @@ HistoryViewer::HistoryViewer(QWidget * parent) :
     // Delete request button
     QObject::connect(_ui.pbDelete, &QPushButton::clicked,
                      this, &HistoryViewer::_onPbDeleteClicked);
-    {
-    });
-    // Delete request button
-    QObject::connect(_ui.pbDelete, &QPushButton::clicked, [this]
-    {
-    });
 }
 
 bool HistoryViewer::hasRequest(RequestPtr request) const
