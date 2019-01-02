@@ -102,6 +102,12 @@ void Request::fromJson(const QJsonObject & json)
         from18Request(json, *this);
 }
 
+bool Request::isNull() const
+{
+    return method.isEmpty() ||
+           url().isEmpty();
+}
+
 QDataStream & operator<<(QDataStream & out, const Request & request)
 {
     out << request.url();

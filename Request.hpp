@@ -42,6 +42,8 @@ struct Request : public QNetworkRequest
 
     QJsonObject toJson() const;
     void fromJson(const QJsonObject & json);
+
+    bool isNull() const;
 };
 
 using RequestPtr = std::shared_ptr<Request>;
