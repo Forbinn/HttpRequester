@@ -149,14 +149,23 @@ QTableWidgetItem * HistoryViewer::_createTableItem(const QString & text, bool da
 
 QString HistoryViewer::_formatSize(qint32 size)
 {
+    static const auto f = [](const int value, const int factor)
+    {
+        const auto val = (value % factor) / (factor / 10);
+        if (val == 0)
+            return QString::number(value / factor);
+        else
+            return QString("%1.%2").arg(value / factor).arg(val);
+    };
+
     if (size < 1024)
         return QString("%1 B").arg(size);
     else if (size < 1024 * 1024)
-        return QString("%1 kB").arg(size / 1024);
+        return QString("%1 kB").arg(f(size, 1024));
     else if (size < 1024 * 1024 * 1024)
-        return QString("%1 MB").arg(size / (1024 * 1024));
+        return QString("%1 MB").arg(f(size , 1024 * 1024));
     else
-        return QString("%1 GB").arg(size / (1024 * 1024 * 1024));
+        return QString("%1 GB").arg(f(size , 1024 * 1024 * 1024));
 }
 
 void HistoryViewer::_itemSelectionChanged()
