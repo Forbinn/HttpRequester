@@ -58,9 +58,9 @@ void from18Request(const QJsonObject & json, Request & request)
     request.setUrl(jsonRequest.value(Keys::requestUrl).toString());
     headerFromJson(jsonRequest.value(Keys::requestHeaders).toObject(), request);
 
-    request.statusCode      = static_cast<quint32>(json.value(Keys::responseStatus).toInt());
-    request.reasonPhrase    = json.value(Keys::responseReason).toString();
-    request.responseContent = QByteArray::fromBase64(json.value(Keys::responseContent).toString().toUtf8());
+    request.statusCode      = static_cast<quint32>(jsonResponse.value(Keys::responseStatus).toInt());
+    request.reasonPhrase    = jsonResponse.value(Keys::responseReason).toString();
+    request.responseContent = QByteArray::fromBase64(jsonResponse.value(Keys::responseContent).toString().toUtf8());
     request.responseHeaders = headerFromJson(jsonResponse.value(Keys::responseHeaders).toObject());
 
     request.date          = QDateTime::fromString(json.value(Keys::requestDate).toString(), Constants::exportDateFormat);
