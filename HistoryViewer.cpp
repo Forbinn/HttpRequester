@@ -115,11 +115,11 @@ void HistoryViewer::_fillTableRow(int row, const RequestPtr request)
 
 int HistoryViewer::_getRequestIdxForItem(const QTableWidgetItem * item) const
 {
-    struct NoOpDeleter
-    { void operator()(Request *) const {} };
-
     const auto request = _getRequestForItem(item);
-    return _requests.indexOf(std::shared_ptr<Request>(request, NoOpDeleter{}));
+    for (int i = 0; i < _requests.size(); ++i)
+        if (_requests.at(i).get() == request)
+            return i;
+    return -1;
 }
 
 Request * HistoryViewer::_getRequestForItem(const QTableWidgetItem * item) const
@@ -181,14 +181,26 @@ void HistoryViewer::_onPbClearClicked()
 
 void HistoryViewer::_onPbDeleteClicked()
 {
-    const auto idx = _getRequestIdxForItem(_ui.tableWidget->currentItem());
-    _requests.removeAt(idx);
+    auto selectedItems = _ui.tableWidget->selectedItems();
+    std::sort(selectedItems.begin(), selectedItems.end(),
+              [](const QTableWidgetItem * v1, const QTableWidgetItem * v2)
+    { return v1->row() < v2->row(); });
 
-    QObject::disconnect(_ui.tableWidget, &QTableWidget::itemSelectionChanged,
-                        this, &HistoryViewer::_itemSelectionChanged);
-    _ui.tableWidget->removeRow(_ui.tableWidget->currentRow());
-    QObject::connect(_ui.tableWidget, &QTableWidget::itemSelectionChanged,
-                     this, &HistoryViewer::_itemSelectionChanged);
+    selectedItems.erase(std::unique(selectedItems.begin(), selectedItems.end(),
+                                    [](const QTableWidgetItem * v1, const QTableWidgetItem * v2)
+    { return v1->row() == v2->row(); }), selectedItems.end());
+
+    for (const auto & item : selectedItems)
+    {
+        const auto idx = _getRequestIdxForItem(item);
+        _requests.removeAt(idx);
+
+        QObject::disconnect(_ui.tableWidget, &QTableWidget::itemSelectionChanged,
+                            this, &HistoryViewer::_itemSelectionChanged);
+        _ui.tableWidget->removeRow(item->row());
+        QObject::connect(_ui.tableWidget, &QTableWidget::itemSelectionChanged,
+                         this, &HistoryViewer::_itemSelectionChanged);
+    }
 
     if (_ui.tableWidget->rowCount() == 0)
         _ui.pbClear->setEnabled(false);
