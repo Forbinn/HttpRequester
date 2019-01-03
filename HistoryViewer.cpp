@@ -1,4 +1,4 @@
-/*
+﻿/*
 ** Copyright 2017 ViVoka
 **
 ** Made by leroy_v
@@ -15,6 +15,12 @@
 
 // Qt includes -----------------------------------------------------------------
 #include <QKeyEvent>
+#include <QGuiApplication>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QWindow>
+#include <QMimeData>
+#include <QMessageBox>
 
 HistoryViewer::HistoryViewer(QWidget * parent) :
     QWidget(parent)
@@ -28,12 +34,22 @@ HistoryViewer::HistoryViewer(QWidget * parent) :
     QObject::connect(_ui.tableWidget, &QTableWidget::itemSelectionChanged,
                      this, &HistoryViewer::_itemSelectionChanged);
 
+    QObject::connect(qApp, &QGuiApplication::focusWindowChanged,
+                     this, &HistoryViewer::_onWindowFocusChanged);
+
+    auto clipboard = QGuiApplication::clipboard();
+    QObject::connect(clipboard, &QClipboard::changed,
+                     this, &HistoryViewer::_onClipboardChanged);
+
     // Clear history button
     QObject::connect(_ui.pbClear, &QPushButton::clicked,
                      this, &HistoryViewer::_onPbClearClicked);
     // Delete request button
     QObject::connect(_ui.pbDelete, &QPushButton::clicked,
                      this, &HistoryViewer::_onPbDeleteClicked);
+    // Copy to clipboard button
+    QObject::connect(_ui.pbCopyClipboard, &QPushButton::clicked,
+                     this, &HistoryViewer::_onPbCopyClipboardClicked);
 }
 
 bool HistoryViewer::hasRequest(RequestPtr request) const
@@ -43,7 +59,7 @@ bool HistoryViewer::hasRequest(RequestPtr request) const
 
 void HistoryViewer::updateRequest(RequestPtr request)
 {
-    const auto row = _getRowForRequest(request);
+    const auto row = _getRowForRequest(request.get());
     _fillTableRow(row, request);
 
     _ui.tableWidget->viewport()->update();
@@ -128,16 +144,78 @@ Request * HistoryViewer::_getRequestForItem(const QTableWidgetItem * item) const
     return qvariant_cast<Request *>(firstItem->data(Qt::UserRole));
 }
 
-int HistoryViewer::_getRowForRequest(const RequestPtr request) const
+int HistoryViewer::_getRowForRequest(const Request * request) const
 {
     for (int row = 0; row < _ui.tableWidget->rowCount(); ++row)
     {
         const auto item = _ui.tableWidget->item(row, 0);
-        if (qvariant_cast<Request *>(item->data(Qt::UserRole)) == request.get())
+        if (qvariant_cast<Request *>(item->data(Qt::UserRole)) == request)
             return row;
     }
 
     return -1;
+}
+
+QVector<QTableWidgetItem *> HistoryViewer::_getUniqueItemPerSelectedRow() const
+{
+    auto selectedItems = QVector<QTableWidgetItem *>::fromList(_ui.tableWidget->selectedItems());
+    std::sort(selectedItems.begin(), selectedItems.end(),
+              [](const QTableWidgetItem * v1, const QTableWidgetItem * v2)
+    { return v1->row() < v2->row(); });
+
+    selectedItems.erase(std::unique(selectedItems.begin(), selectedItems.end(),
+                                    [](const QTableWidgetItem * v1, const QTableWidgetItem * v2)
+    { return v1->row() == v2->row(); }), selectedItems.end());
+    return selectedItems;
+}
+
+void HistoryViewer::_tryLoadRequestFromClipboard(QClipboard::Mode mode)
+{
+    // Check clipboard info
+    auto clipboard = QGuiApplication::clipboard();
+    if (clipboard->mimeData(mode) == nullptr || !clipboard->mimeData(mode)->hasText())
+        return ;
+
+    const auto json = QJsonDocument::fromJson(clipboard->text(mode).toUtf8()).object();
+    if (json.isEmpty())
+        return ;
+
+    // Convert clipboard info into requests
+    std::vector<RequestPtr> requests;
+    const auto jsonRequests = json.value(Keys::requests).toArray();
+    requests.reserve(static_cast<std::size_t>(jsonRequests.size()));
+    for (const auto jsonRequest : jsonRequests)
+    {
+        requests.emplace_back(std::make_shared<Request>());
+        auto & request = requests.back();
+        request->fromJson(jsonRequest.toObject());
+
+        if (request->isNull())
+            requests.pop_back();
+    }
+
+    if (requests.empty())
+        return ;
+
+    // Ask the user if he want to import
+    const auto button = QMessageBox::question(this, "Import request?",
+                                              QString("Would you like to import %1 HTTP request%2 from your clipboard?")
+                                              .arg(requests.size()).arg(requests.size() > 1 ? "s" : ""));
+    if (button != QMessageBox::Yes)
+        return ;
+
+    // Add request to the table widget
+    for (const auto & request : requests)
+        addRequest(request);
+
+    // Select new row
+    std::vector<int> newRequestRows;
+    for (const auto & request : requests)
+        newRequestRows.push_back(_getRowForRequest(request.get()));
+
+    _ui.tableWidget->clearSelection();
+    for (const auto & row : newRequestRows)
+        _ui.tableWidget->setRangeSelected({row, 0, row, _ui.tableWidget->columnCount() - 1}, true);
 }
 
 QTableWidgetItem * HistoryViewer::_createTableItem(const QString & text, bool dateTime)
@@ -172,6 +250,7 @@ void HistoryViewer::_itemSelectionChanged()
 {
     const auto areItemSelected = !_ui.tableWidget->selectedItems().isEmpty();
     _ui.pbDelete->setEnabled(areItemSelected);
+    _ui.pbCopyClipboard->setEnabled(areItemSelected);
 
     if (!areItemSelected)
         return ;
@@ -190,15 +269,7 @@ void HistoryViewer::_onPbClearClicked()
 
 void HistoryViewer::_onPbDeleteClicked()
 {
-    auto selectedItems = _ui.tableWidget->selectedItems();
-    std::sort(selectedItems.begin(), selectedItems.end(),
-              [](const QTableWidgetItem * v1, const QTableWidgetItem * v2)
-    { return v1->row() < v2->row(); });
-
-    selectedItems.erase(std::unique(selectedItems.begin(), selectedItems.end(),
-                                    [](const QTableWidgetItem * v1, const QTableWidgetItem * v2)
-    { return v1->row() == v2->row(); }), selectedItems.end());
-
+    const auto selectedItems = _getUniqueItemPerSelectedRow();
     for (const auto & item : selectedItems)
     {
         const auto idx = _getRequestIdxForItem(item);
@@ -215,4 +286,42 @@ void HistoryViewer::_onPbDeleteClicked()
         _ui.pbClear->setEnabled(false);
 
     _itemSelectionChanged();
+}
+
+void HistoryViewer::_onPbCopyClipboardClicked()
+{
+    const auto selectedItems = _getUniqueItemPerSelectedRow();
+    QJsonArray jsonRequests;
+    for (const auto & item : selectedItems)
+    {
+        const auto request = _getRequestForItem(item);
+        jsonRequests.append(request->toJson());
+    }
+
+    _dataCameFromOwnCopy = true;
+    const auto json = QJsonObject{{Keys::requests, jsonRequests}};
+    auto clipboard  = QGuiApplication::clipboard();
+    clipboard->setText(QJsonDocument(json).toJson());
+}
+
+void HistoryViewer::_onWindowFocusChanged(const QWindow * window)
+{
+    if (window == nullptr || !_hasNewDataInClipboard)
+        return ; // Lost window focus
+
+    _hasNewDataInClipboard = false;
+    _tryLoadRequestFromClipboard(_clipboardModeChanged);
+}
+
+void HistoryViewer::_onClipboardChanged(QClipboard::Mode mode)
+{
+    if (_dataCameFromOwnCopy)
+    {
+        _dataCameFromOwnCopy = false;
+        return ;
+    }
+
+    _hasNewDataInClipboard = true;
+    _clipboardModeChanged  = mode;
+    _onWindowFocusChanged(qApp->focusWindow());
 }

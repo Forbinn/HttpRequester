@@ -9,6 +9,8 @@
 
 namespace Keys
 {
+    constexpr const auto requests                 = "requests";
+
     constexpr const auto request                  = "request";
     constexpr const auto requestMethod            = "method";
     constexpr const auto requestUrl               = "url";

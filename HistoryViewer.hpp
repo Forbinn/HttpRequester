@@ -12,6 +12,7 @@
 // Qt includes -----------------------------------------------------------------
 #include <QWidget>
 #include <QVector>
+#include <QClipboard>
 
 // Project includes ------------------------------------------------------------
 #include "ui_HistoryViewer.h"
@@ -48,7 +49,11 @@ private:
 
     int _getRequestIdxForItem(const QTableWidgetItem * item) const;
     Request * _getRequestForItem(const QTableWidgetItem * item) const;
-    int _getRowForRequest(const RequestPtr request) const;
+    int _getRowForRequest(const Request * request) const;
+
+    QVector<QTableWidgetItem *> _getUniqueItemPerSelectedRow() const;
+
+    void _tryLoadRequestFromClipboard(QClipboard::Mode mode);
 
 private:
     static QTableWidgetItem * _createTableItem(const QString & text = {}, bool dateTime = false);
@@ -59,6 +64,10 @@ private slots:
 
     void _onPbClearClicked();
     void _onPbDeleteClicked();
+    void _onPbCopyClipboardClicked();
+
+    void _onClipboardChanged(QClipboard::Mode mode);
+    void _onWindowFocusChanged(const QWindow * window);
 
 signals:
     void currentChanged(RequestPtr request);
@@ -67,4 +76,7 @@ private:
     Ui::HistoryViewer _ui;
 
     QVector<RequestPtr> _requests;
+    bool                _hasNewDataInClipboard = false;
+    bool                _dataCameFromOwnCopy = false;
+    QClipboard::Mode    _clipboardModeChanged;
 };
