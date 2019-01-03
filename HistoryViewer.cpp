@@ -95,8 +95,6 @@ void HistoryViewer::_addRequestToTable(const RequestPtr request)
     _ui.tableWidget->setRowCount(row + 1);
     _fillTableRow(row, request);
 
-    _ui.tableWidget->item(row, 0)->setData(Qt::UserRole, QVariant::fromValue(request.get()));
-
     _ui.pbClear->setEnabled(true);
     _ui.tableWidget->sortItems(3, Qt::DescendingOrder);
     _ui.tableWidget->viewport()->update();
@@ -111,6 +109,8 @@ void HistoryViewer::_fillTableRow(int row, const RequestPtr request)
     _ui.tableWidget->setItem(row, 3, _createTableItem(request->date.toString(DateTimeItem::dateFormat), true));
     _ui.tableWidget->setItem(row, 4, _createTableItem(_formatSize(request->responseContent.size())));
     _ui.tableWidget->setItem(row, 5, _createTableItem(QString("%1 ms").arg(request->elapsedTime)));
+
+    _ui.tableWidget->item(row, 0)->setData(Qt::UserRole, QVariant::fromValue(request.get()));
 }
 
 int HistoryViewer::_getRequestIdxForItem(const QTableWidgetItem * item) const
